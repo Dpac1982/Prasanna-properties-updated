@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prasanna Properties — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F6F9;
+  --surface:#FFFFFF;
+  --surface2:#F8F9FA;
+  --border:rgba(0,0,0,0.08);
+  --border2:rgba(0,0,0,0.14);
+  --text:#1A1D23;
+  --muted:#6B7280;
+  --dim:#9CA3AF;
+  --blue:#185FA5;--blue-bg:#E6F1FB;
+  --green:#1D9E75;--green-bg:#E8F5E9;
+  --red:#D85A30;--red-bg:#FEF0EA;
+  --gold:#BA7517;--gold-bg:#FAEEDA;
+  --purple:#534AB7;--purple-bg:#EEEDFE;
+  --teal:#0F6E56;--teal-bg:#E1F5EE;
+}
+
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:10}
+.sb-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.sb-brand{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--text);letter-spacing:.01em}
+.sb-tagline{font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
+.sb-section{font-size:9px;color:var(--dim);padding:14px 18px 5px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.sb-item{display:flex;align-items:center;gap:10px;padding:8px 18px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s;border-left:2px solid transparent}
+.sb-item:hover{background:var(--surface2);color:var(--text)}
+.sb-item.on{background:var(--blue-bg);color:var(--blue);border-left-color:var(--blue);font-weight:500}
+.sb-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sb-divider{height:1px;background:var(--border);margin:8px 18px}
+.sb-bottom{margin-top:auto;padding:16px 18px;border-top:1px solid var(--border)}
+.sb-date{font-size:10px;color:var(--dim);font-family:'DM Mono',monospace}
+
+/* ── MAIN ── */
+.main{margin-left:220px;flex:1;padding:24px;min-height:100vh}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.topbar-left h1{font-size:18px;font-weight:500;color:var(--text)}
+.topbar-left p{font-size:12px;color:var(--muted);margin-top:2px}
+.topbar-right{display:flex;gap:6px;align-items:center}
+.filter-pill{padding:5px 12px;border:1px solid var(--border2);border-radius:20px;font-size:11px;color:var(--muted);cursor:pointer;background:var(--surface);transition:all .15s;font-family:'DM Sans',sans-serif}
+.filter-pill:hover{border-color:var(--blue);color:var(--blue)}
+.filter-pill.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ── KPI CARDS ── */
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kcard{background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border);position:relative;overflow:hidden;transition:box-shadow .2s}
+.kcard:hover{box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+.kcard-top{position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.klabel{font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:500;letter-spacing:.02em}
+.kval{font-size:22px;font-weight:500;color:var(--text);line-height:1;font-family:'DM Mono',monospace}
+.ksub{font-size:10px;color:var(--muted);margin-top:5px}
+.kpbar{height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden}
+.kpfill{height:4px;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.kicon{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+
+/* ── CHART CARDS ── */
+.chart-grid-2{display:grid;grid-template-columns:3fr 2fr;gap:14px;margin-bottom:14px}
+.chart-grid-2b{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.chart-grid-2c{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.chart-card{background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)}
+.chart-title{font-size:11px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px;font-weight:500}
+
+/* ── LEGEND ── */
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.legend-sq{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ── DEV BARS ── */
+.dev-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.dev-name{font-size:11px;color:var(--text);width:95px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.dev-track{flex:1;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.dev-fill{height:7px;border-radius:4px;transition:width .8s ease}
+.dev-val{font-size:10px;color:var(--muted);width:36px;text-align:right;flex-shrink:0;font-family:'DM Mono',monospace}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);font-weight:500}
+td{padding:9px 10px;border-bottom:1px solid rgba(0,0,0,0.04);color:var(--text);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+.badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:500;letter-spacing:.03em}
+
+/* ── PROGRESS BAR (table) ── */
+.prog-wrap{display:flex;align-items:center;gap:6px}
+.prog-track{width:64px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;flex-shrink:0}
+.prog-fill{height:4px;border-radius:2px}
+.prog-pct{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;min-width:28px}
+
+/* ── UPCOMING ── */
+.upcoming-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.upcoming-item:last-child{border-bottom:none}
+.u-prop{font-size:11px;font-weight:500;color:var(--text)}
+.u-inst{font-size:10px;color:var(--muted);margin-top:1px}
+.u-right{text-align:right}
+.u-amt{font-size:12px;font-weight:500;color:var(--text);font-family:'DM Mono',monospace}
+.u-days{font-size:10px;font-weight:500;margin-top:1px}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .sidebar{width:100%;min-height:auto;position:relative;flex-direction:row;flex-wrap:wrap;padding:8px}
+  .sb-logo{padding:8px 12px;border-bottom:none;border-right:1px solid var(--border)}
+  .sb-section,.sb-divider,.sb-bottom,.sb-tagline{display:none}
+  .sb-item{padding:6px 10px;font-size:11px;border-left:none;border-bottom:2px solid transparent}
+  .sb-item.on{border-bottom-color:var(--blue);border-left-color:transparent}
+  .main{margin-left:0;padding:14px}
+  .kgrid{grid-template-columns:repeat(2,1fr)}
+  .chart-grid-2,.chart-grid-2b,.chart-grid-2c{grid-template-columns:1fr}
+  body{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-brand">Prasanna</div>
+    <div class="sb-tagline">Portfolio · Dubai</div>
+  </div>
+
+  <div class="sb-section">Overview</div>
+  <div class="sb-item on"><span class="sb-dot" style="background:var(--blue)"></span>Dashboard</div>
+
+  <div class="sb-section">Portfolio</div>
+  <div class="sb-item"><span class="sb-dot" style="background:var(--green)"></span>All properties</div>
+  <div class="sb-item"><span class="sb-dot" style="background:var(--gold)"></span>Payment schedule</div>
+  <div class="sb-item"><span class="sb-dot" style="background:var(--purple)"></span>Yearly cashflow</div>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section">By Developer</div>
+  <div class="sb-item"><span class="sb-dot" style="background:#185FA5"></span>Emaar</div>
+  <div class="sb-item"><span class="sb-dot" style="background:#BA7517"></span>Majid Al Futtaim</div>
+  <div class="sb-item"><span class="sb-dot" style="background:#1D9E75"></span>Nakheel</div>
+  <div class="sb-item"><span class="sb-dot" style="background:#534AB7"></span>Dubai Properties</div>
+  <div class="sb-item"><span class="sb-dot" style="background:#993C1D"></span>Divine One</div>
+  <div class="sb-item"><span class="sb-dot" style="background:#993556"></span>Tilal Al Ghaf</div>
+
+  <div class="sb-divider"></div>
+  <div class="sb-section">Filters</div>
+  <div class="sb-item">Upcoming (90d)</div>
+  <div class="sb-item">Due this month</div>
+
+  <div class="sb-bottom">
+    <div class="sb-date" id="sideDate"></div>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main class="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Portfolio Overview</h1>
+      <p id="topDate"></p>
+    </div>
+    <div class="topbar-right">
+      <button class="filter-pill on" onclick="setYr('all',this)">All years</button>
+      <button class="filter-pill" onclick="setYr('2025',this)">2025</button>
+      <button class="filter-pill" onclick="setYr('2026',this)">2026</button>
+      <button class="filter-pill" onclick="setYr('2027',this)">2027</button>
+      <button class="filter-pill" onclick="setYr('2028',this)">2028</button>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kgrid">
+    <div class="kcard">
+      <div class="kcard-top" style="background:var(--blue)"></div>
+      <div class="kicon" style="background:var(--blue-bg)">🏢</div>
+      <div class="klabel">Total investment</div>
+      <div class="kval" id="kInv">—</div>
+      <div class="ksub" id="kInvSub">—</div>
+    </div>
+    <div class="kcard">
+      <div class="kcard-top" style="background:var(--green)"></div>
+      <div class="kicon" style="background:var(--green-bg)">✓</div>
+      <div class="klabel">Total paid</div>
+      <div class="kval" style="color:var(--green)" id="kPaid">—</div>
+      <div class="ksub" id="kPaidSub">—</div>
+      <div class="kpbar"><div class="kpfill" id="kPaidBar" style="background:var(--green)"></div></div>
+    </div>
+    <div class="kcard">
+      <div class="kcard-top" style="background:var(--red)"></div>
+      <div class="kicon" style="background:var(--red-bg)">↓</div>
+      <div class="klabel">Balance due</div>
+      <div class="kval" style="color:var(--red)" id="kDue">—</div>
+      <div class="ksub" id="kDueSub">—</div>
+    </div>
+    <div class="kcard">
+      <div class="kcard-top" style="background:var(--gold)"></div>
+      <div class="kicon" style="background:var(--gold-bg)">⏰</div>
+      <div class="klabel">Next payment due</div>
+      <div class="kval" style="color:var(--gold);font-size:15px" id="kNext">—</div>
+      <div class="ksub" id="kNextSub">—</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Yearly bar + Donut -->
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Payments by year — paid vs due (AED M)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-sq" style="background:var(--green)"></div>Paid</div>
+        <div class="legend-item"><div class="legend-sq" style="background:var(--red)"></div>Due / remaining</div>
+      </div>
+      <div style="position:relative;width:100%;height:220px">
+        <canvas id="chartYearly" role="img" aria-label="Stacked bar chart of annual payments 2024 to 2029 split by paid and due">Annual payments by year.</canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Investment by developer</div>
+      <div style="position:relative;width:100%;height:180px">
+        <canvas id="chartDev" role="img" aria-label="Doughnut chart of investment split across 6 developers">Investment split by developer.</canvas>
+      </div>
+      <div class="legend" id="devLegend" style="margin-top:12px;margin-bottom:0"></div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Monthly 2026 + Dev bars -->
+  <div class="chart-grid-2b">
+    <div class="chart-card">
+      <div class="chart-title">Monthly payment schedule — 2026 (AED M)</div>
+      <div style="position:relative;width:100%;height:160px">
+        <canvas id="chartMonthly" role="img" aria-label="Bar chart of monthly payment amounts due in 2026">Monthly payments 2026.</canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Properties by developer</div>
+      <div id="devBars" style="margin-top:4px"></div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Properties table + Upcoming -->
+  <div class="chart-grid-2c">
+    <div class="chart-card">
+      <div class="chart-title">All properties — progress tracker</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Property</th>
+              <th>Dev</th>
+              <th>Price</th>
+              <th>Paid</th>
+              <th>Balance</th>
+              <th>Progress</th>
+            </tr>
+          </thead>
+          <tbody id="propBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Upcoming payments — next 90 days</div>
+      <div id="upcomingList"></div>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+        <div class="chart-title" style="margin-bottom:10px">Payment progress — top 6</div>
+        <div id="progressRings" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const PROPS = [
+  {id:1,name:"District One West",dev:"NAKHEEL",pp:30670000,pays:[{d:"2023-09-01",a:6134000,p:1,l:"Booking"},{d:"2023-09-01",a:4600500,p:1,l:"1st"},{d:"2024-03-01",a:3067000,p:1,l:"2nd"},{d:"2024-09-01",a:3067000,p:1,l:"3rd"},{d:"2025-03-01",a:3067000,p:1,l:"4th"},{d:"2025-09-01",a:3067000,p:0,l:"5th Installment"},{d:"2026-03-01",a:1533500,p:0,l:"6th Installment"},{d:"2027-10-01",a:6134000,p:0,l:"Final"}]},
+  {id:2,name:"Palm Jebel Ali 89",dev:"NAKHEEL",pp:21398800,pays:[{d:"2024-03-15",a:4279760,p:1,l:"Booking"},{d:"2024-03-15",a:2139880,p:1,l:"1st"},{d:"2024-07-15",a:2139880,p:1,l:"2nd"},{d:"2025-01-15",a:2139880,p:1,l:"3rd"},{d:"2025-07-15",a:2139880,p:1,l:"4th"},{d:"2026-01-15",a:2139880,p:0,l:"5th Installment"},{d:"2026-07-15",a:2139880,p:0,l:"6th Installment"},{d:"2027-10-01",a:4279760,p:0,l:"Final"}]},
+  {id:3,name:"Palm Jebel Ali 110",dev:"NAKHEEL",pp:21398800,pays:[{d:"2024-09-15",a:4279760,p:1,l:"Booking"},{d:"2024-09-15",a:3209820,p:1,l:"1st"},{d:"2025-02-15",a:3209820,p:1,l:"2nd"},{d:"2025-07-15",a:2139880,p:1,l:"3rd"},{d:"2025-12-15",a:2139880,p:0,l:"4th Installment"},{d:"2026-05-15",a:2139880,p:0,l:"5th Installment"},{d:"2027-10-01",a:4279760,p:0,l:"Final"}]},
+  {id:4,name:"Palm Jebel Ali 98",dev:"NAKHEEL",pp:43668800,pays:[{d:"2025-03-15",a:8733760,p:1,l:"Booking"},{d:"2025-03-15",a:4366880,p:1,l:"1st"},{d:"2025-09-15",a:4366880,p:0,l:"2nd Installment"},{d:"2026-03-15",a:4366880,p:0,l:"3rd Installment"},{d:"2026-09-15",a:4366880,p:0,l:"4th Installment"},{d:"2027-03-15",a:4366880,p:0,l:"5th"},{d:"2027-06-15",a:4366880,p:0,l:"6th"},{d:"2027-10-01",a:8733760,p:0,l:"Final"}]},
+  {id:5,name:"Serenity Mansion",dev:"MAJID AL FUTTAIM",pp:28963000,pays:[{d:"2024-04-22",a:2896300,p:1,l:"Booking"},{d:"2024-07-15",a:2896300,p:1,l:"2nd"},{d:"2025-04-15",a:1448150,p:1,l:"3rd"},{d:"2025-08-15",a:1448150,p:1,l:"4th"},{d:"2025-11-15",a:2896300,p:0,l:"5th Installment"},{d:"2026-02-15",a:1448150,p:0,l:"6th"},{d:"2026-05-15",a:1448150,p:0,l:"7th"},{d:"2026-08-15",a:2896300,p:0,l:"8th"},{d:"2026-12-15",a:11585200,p:0,l:"Final"}]},
+  {id:6,name:"Lanai Island",dev:"MAJID AL FUTTAIM",pp:66454700,pays:[{d:"2024-03-04",a:6645470,p:1,l:"Booking"},{d:"2024-07-15",a:6645470,p:1,l:"2nd"},{d:"2024-11-15",a:6645470,p:1,l:"3rd"},{d:"2025-03-15",a:6645470,p:1,l:"4th"},{d:"2025-06-15",a:6645470,p:1,l:"5th"},{d:"2025-09-15",a:6645470,p:0,l:"6th Installment"},{d:"2025-12-15",a:6645470,p:0,l:"7th Installment"},{d:"2026-03-15",a:6645470,p:0,l:"8th"},{d:"2026-06-15",a:6645470,p:0,l:"9th"},{d:"2026-11-15",a:6645470,p:0,l:"Final"}]},
+  {id:7,name:"Ghaf Woods Cilia",dev:"MAJID AL FUTTAIM",pp:11008000,pays:[{d:"2024-06-11",a:1100800,p:1,l:"Booking"},{d:"2024-09-15",a:1100800,p:1,l:"2nd"},{d:"2025-01-15",a:550400,p:1,l:"3rd"},{d:"2025-05-15",a:550400,p:1,l:"4th"},{d:"2025-09-15",a:1100800,p:0,l:"5th Installment"},{d:"2026-01-15",a:550400,p:0,l:"6th"},{d:"2026-07-15",a:550400,p:0,l:"7th"},{d:"2027-01-15",a:550400,p:0,l:"8th"},{d:"2027-05-15",a:550400,p:0,l:"9th"},{d:"2027-09-15",a:4403200,p:0,l:"Final"}]},
+  {id:8,name:"Golf Lane",dev:"EMAAR",pp:9863776,pays:[{d:"2024-06-01",a:1972755,p:1,l:"Booking"},{d:"2024-12-30",a:986378,p:1,l:"2nd"},{d:"2025-06-30",a:986378,p:1,l:"3rd"},{d:"2026-01-12",a:986378,p:0,l:"10% Construction"},{d:"2026-07-01",a:986378,p:0,l:"20% Construction"},{d:"2027-01-20",a:986378,p:0,l:"40% Construction"},{d:"2027-07-15",a:986378,p:0,l:"60% Construction"},{d:"2028-10-31",a:1972755,p:0,l:"100% Construction"}]},
+  {id:9,name:"La Tilia",dev:"DUBAI PROPERTIES",pp:20327000,pays:[{d:"2024-11-23",a:4065400,p:1,l:"Booking"},{d:"2025-08-15",a:2032700,p:1,l:"2nd"},{d:"2025-11-15",a:1016350,p:0,l:"3rd Installment"},{d:"2026-04-15",a:2032700,p:0,l:"4th"},{d:"2026-09-15",a:2032700,p:0,l:"5th"},{d:"2027-02-15",a:1016350,p:0,l:"6th"},{d:"2028-09-15",a:8130800,p:0,l:"100% Construction"}]},
+  {id:10,name:"Vida Club Point",dev:"EMAAR",pp:11073552,pays:[{d:"2024-11-26",a:2214710,p:1,l:"Booking"},{d:"2025-06-30",a:1107355,p:1,l:"2nd"},{d:"2025-11-30",a:1107355,p:0,l:"3rd Installment"},{d:"2026-06-03",a:1107355,p:0,l:"20% Const"},{d:"2026-10-06",a:553678,p:0,l:"30% Const"},{d:"2027-05-19",a:1107355,p:0,l:"50% Const"},{d:"2027-11-23",a:553678,p:0,l:"70% Const"},{d:"2028-07-18",a:1107355,p:0,l:"90% Const"},{d:"2029-02-28",a:2214710,p:0,l:"100%"}]},
+  {id:11,name:"Elysian Mansion 8",dev:"MAJID AL FUTTAIM",pp:44253000,pays:[{d:"2024-12-02",a:8850600,p:1,l:"Booking"},{d:"2025-03-15",a:6637950,p:1,l:"2nd"},{d:"2025-06-15",a:6637950,p:1,l:"3rd"},{d:"2026-06-01",a:22126500,p:0,l:"Final Installment"}]},
+  {id:12,name:"Serenity ARA 32",dev:"MAJID AL FUTTAIM",pp:37026000,pays:[{d:"2024-12-04",a:3702600,p:1,l:"Booking"},{d:"2025-03-15",a:3702600,p:1,l:"2nd"},{d:"2025-06-15",a:1851300,p:1,l:"3rd"},{d:"2025-09-15",a:1851300,p:0,l:"4th Installment"},{d:"2025-12-15",a:1851300,p:0,l:"5th"},{d:"2026-03-15",a:1851300,p:0,l:"6th"},{d:"2026-06-15",a:1851300,p:0,l:"7th"},{d:"2026-09-15",a:1851300,p:0,l:"8th"},{d:"2026-12-15",a:1851300,p:0,l:"9th"},{d:"2027-03-15",a:1851300,p:0,l:"10th"},{d:"2027-06-15",a:14810400,p:0,l:"Final"}]},
+  {id:13,name:"DH Hills Edge",dev:"EMAAR",pp:33060720,pays:[{d:"2024-12-17",a:13224288,p:1,l:"Booking (40%)"},{d:"2026-07-01",a:3306072,p:0,l:"30% Const"},{d:"2027-01-13",a:3306072,p:0,l:"50% Const"},{d:"2027-06-15",a:3306072,p:0,l:"70% Const"},{d:"2028-01-18",a:3306072,p:0,l:"90% Const"},{d:"2029-01-31",a:6612144,p:0,l:"100%"}]},
+  {id:14,name:"ES Golf Acres",dev:"EMAAR",pp:12444328,pays:[{d:"2024-12-23",a:2488866,p:1,l:"Booking"},{d:"2025-04-18",a:1244433,p:1,l:"2nd"},{d:"2026-01-18",a:1244433,p:0,l:"3rd Installment"},{d:"2026-08-20",a:1244433,p:0,l:"20% Const"},{d:"2027-02-06",a:1244433,p:0,l:"40% Const"},{d:"2027-07-03",a:1244433,p:0,l:"60% Const"},{d:"2028-02-24",a:1244433,p:0,l:"90% Const"},{d:"2028-12-31",a:2488866,p:0,l:"100%"}]},
+  {id:15,name:"Bristol Beachfront",dev:"EMAAR",pp:31364664,pays:[{d:"2025-01-30",a:3136466,p:1,l:"Booking"},{d:"2025-03-30",a:3136466,p:1,l:"2nd"},{d:"2025-08-30",a:3136466,p:1,l:"3rd"},{d:"2026-03-30",a:3136466,p:0,l:"4th Installment"},{d:"2026-08-30",a:3136466,p:0,l:"5th"},{d:"2027-04-04",a:3136466,p:0,l:"30% Const"},{d:"2027-11-12",a:3136466,p:0,l:"50% Const"},{d:"2028-08-09",a:3136466,p:0,l:"80% Const"},{d:"2029-09-30",a:6272933,p:0,l:"100%"}]},
+  {id:16,name:"Address Tierra Oasis",dev:"EMAAR",pp:77217552,pays:[{d:"2025-03-08",a:7721755,p:1,l:"Booking"},{d:"2025-07-10",a:7721755,p:1,l:"2nd"},{d:"2026-01-10",a:7721755,p:0,l:"3rd Installment"},{d:"2026-06-10",a:7721755,p:0,l:"4th"},{d:"2027-01-02",a:7721755,p:0,l:"5th"},{d:"2027-06-02",a:7721755,p:0,l:"30% Const"},{d:"2028-02-15",a:7721755,p:0,l:"50% Const"},{d:"2028-09-16",a:7721755,p:0,l:"80% Const"},{d:"2029-06-30",a:15443510,p:0,l:"100%"}]},
+  {id:17,name:"Grand Polo Chavelia",dev:"EMAAR",pp:30254776,pays:[{d:"2025-04-30",a:3025478,p:1,l:"Booking"},{d:"2025-07-01",a:3025478,p:1,l:"2nd"},{d:"2026-01-01",a:3025478,p:0,l:"3rd Installment"},{d:"2026-06-01",a:3025478,p:0,l:"4th"},{d:"2027-01-01",a:3025478,p:0,l:"5th"},{d:"2027-06-26",a:3025478,p:0,l:"30% Const"},{d:"2028-02-16",a:3025478,p:0,l:"50% Const"},{d:"2028-05-24",a:3025478,p:0,l:"80% Const"},{d:"2029-04-30",a:6050955,p:0,l:"100%"}]},
+  {id:18,name:"Hammock Park",dev:"DIVINE ONE",pp:5601390,pays:[{d:"2025-04-30",a:2240556,p:1,l:"Booking"},{d:"2025-10-16",a:280070,p:0,l:"12-mo Install"},{d:"2025-12-15",a:280070,p:0,l:"40% Progress"},{d:"2026-03-15",a:280070,p:0,l:"50% Progress"},{d:"2026-06-15",a:280070,p:0,l:"60% Progress"},{d:"2026-09-15",a:280070,p:0,l:"70% Progress"},{d:"2026-12-15",a:280070,p:0,l:"80% Progress"},{d:"2027-03-01",a:1680417,p:0,l:"100%"}]},
+  {id:19,name:"Capria Ghaf Woods",dev:"TILAL AL GHAF",pp:14973000,pays:[{d:"2025-04-21",a:1497300,p:1,l:"Booking"},{d:"2025-08-15",a:748650,p:1,l:"2nd"},{d:"2026-01-15",a:748650,p:0,l:"3rd Installment"},{d:"2026-06-15",a:748650,p:0,l:"4th"},{d:"2026-12-15",a:748650,p:0,l:"5th"},{d:"2027-06-15",a:1497300,p:0,l:"6th"},{d:"2027-12-15",a:748650,p:0,l:"7th"},{d:"2028-06-15",a:1497300,p:0,l:"8th"},{d:"2028-12-15",a:748650,p:0,l:"9th"},{d:"2029-06-15",a:5989200,p:0,l:"100%"}]}
+];
+
+const DCOLS = {
+  "EMAAR":"#185FA5","MAJID AL FUTTAIM":"#BA7517","NAKHEEL":"#1D9E75",
+  "DUBAI PROPERTIES":"#534AB7","DIVINE ONE":"#993C1D","TILAL AL GHAF":"#993556"
+};
+const DBGS = {
+  "EMAAR":"#E6F1FB","MAJID AL FUTTAIM":"#FAEEDA","NAKHEEL":"#E8F5E9",
+  "DUBAI PROPERTIES":"#EEEDFE","DIVINE ONE":"#FAECE7","TILAL AL GHAF":"#FBEAF0"
+};
+const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const today = new Date();
+
+// ── helpers ──
+function fm(n){n=Math.round(n);if(n>=1e9)return'AED '+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'AED '+(n/1e6).toFixed(1)+'M';if(n>=1e3)return'AED '+(n/1e3).toFixed(0)+'K';return'AED '+n.toLocaleString()}
+function fs(n){n=Math.round(n);if(n>=1e9)return(n/1e9).toFixed(2)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toLocaleString()}
+function getPaid(p){return p.pays.filter(x=>x.p).reduce((s,x)=>s+x.a,0)}
+function getDue(p){return p.pays.filter(x=>!x.p).reduce((s,x)=>s+x.a,0)}
+function fdShort(s){const d=new Date(s);return MN[d.getMonth()]+' '+d.getDate()}
+
+// ── dates ──
+const dateStr = today.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+document.getElementById('topDate').textContent = dateStr;
+document.getElementById('sideDate').textContent = dateStr;
+
+// ── KPIs ──
+const totalPP   = PROPS.reduce((s,p)=>s+p.pp,0);
+const totalPaid = PROPS.reduce((s,p)=>s+getPaid(p),0);
+const totalDue  = PROPS.reduce((s,p)=>s+getDue(p),0);
+const pct       = Math.round(totalPaid/totalPP*1000)/10;
+
+document.getElementById('kInv').textContent    = fm(totalPP);
+document.getElementById('kInvSub').textContent = PROPS.length+' properties · 6 developers';
+document.getElementById('kPaid').textContent   = fm(totalPaid);
+document.getElementById('kPaidSub').textContent= pct+'% of total portfolio';
+document.getElementById('kPaidBar').style.width= pct+'%';
+document.getElementById('kDue').textContent    = fm(totalDue);
+document.getElementById('kDueSub').textContent = 'Remaining across all properties';
+
+// next payment
+const future90 = new Date(today); future90.setDate(future90.getDate()+90);
+const upcoming = [];
+PROPS.forEach(p=>p.pays.forEach((pay,i)=>{
+  if(!pay.p&&pay.d){const d=new Date(pay.d);if(d>=today)upcoming.push({...pay,pname:p.name,pid:p.id,pi:i})}
+}));
+upcoming.sort((a,b)=>new Date(a.d)-new Date(b.d));
+if(upcoming.length){
+  const n=upcoming[0];
+  const d=new Date(n.d);
+  const days=Math.ceil((d-today)/864e5);
+  document.getElementById('kNext').textContent    = fm(n.a);
+  document.getElementById('kNextSub').textContent = n.pname.slice(0,22)+' · in '+days+' days';
+}
+
+// ── Upcoming list ──
+const upEl = document.getElementById('upcomingList');
+const near90 = upcoming.filter(p=>new Date(p.d)<=future90);
+if(!near90.length){
+  upEl.innerHTML='<p style="font-size:12px;color:var(--muted);padding:12px 0">No payments due in the next 90 days</p>';
+} else {
+  near90.slice(0,6).forEach(pay=>{
+    const d=new Date(pay.d);
+    const days=Math.ceil((d-today)/864e5);
+    const uc=days<30?'var(--red)':days<60?'var(--gold)':'var(--green)';
+    upEl.innerHTML+=`<div class="upcoming-item">
+      <div>
+        <div class="u-prop">${pay.pname.slice(0,24)}</div>
+        <div class="u-inst">${pay.l||'Installment'}</div>
+      </div>
+      <div class="u-right">
+        <div class="u-amt">${fm(pay.a)}</div>
+        <div class="u-days" style="color:${uc}">${fdShort(pay.d)} · ${days}d away</div>
+      </div>
+    </div>`;
+  });
+}
+
+// ── Properties table ──
+const tbody = document.getElementById('propBody');
+PROPS.slice().sort((a,b)=>b.pp-a.pp).forEach((p,i)=>{
+  const paid=getPaid(p), due=getDue(p), pct2=p.pp?Math.round(paid/p.pp*100):0;
+  const col=DCOLS[p.dev]||'#888', bg=DBGS[p.dev]||'#eee';
+  const shortDev=p.dev.split(' ')[0];
+  tbody.innerHTML+=`<tr>
+    <td style="color:var(--dim)">${i+1}</td>
+    <td style="font-weight:500;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</td>
+    <td><span class="badge" style="background:${bg};color:${col}">${shortDev}</span></td>
+    <td style="font-family:'DM Mono',monospace">${fm(p.pp)}</td>
+    <td style="font-family:'DM Mono',monospace;color:var(--green)">${fm(paid)}</td>
+    <td style="font-family:'DM Mono',monospace;color:var(--red)">${fm(due)}</td>
+    <td><div class="prog-wrap">
+      <div class="prog-track"><div class="prog-fill" style="width:${pct2}%;background:${col}"></div></div>
+      <span class="prog-pct">${pct2}%</span>
+    </div></td>
+  </tr>`;
+});
+
+// ── Developer bars ──
+const devCount={}, devVal={};
+PROPS.forEach(p=>{devCount[p.dev]=(devCount[p.dev]||0)+1; devVal[p.dev]=(devVal[p.dev]||0)+p.pp});
+const devArr=Object.entries(devCount).sort((a,b)=>b[1]-a[1]);
+const maxC=Math.max(...devArr.map(d=>d[1]));
+const devBarsEl=document.getElementById('devBars');
+devArr.forEach(([dev,cnt])=>{
+  const col=DCOLS[dev]||'#888';
+  const shortN=dev.split(' ').slice(0,2).join(' ');
+  devBarsEl.innerHTML+=`<div class="dev-row">
+    <div class="dev-name" title="${dev}">${shortN}</div>
+    <div class="dev-track"><div class="dev-fill" style="width:${Math.round(cnt/maxC*100)}%;background:${col}"></div></div>
+    <div class="dev-val">${cnt} · ${fs(devVal[dev])}</div>
+  </div>`;
+});
+
+// ── Progress rings ──
+const ringsEl = document.getElementById('progressRings');
+PROPS.slice().sort((a,b)=>b.pp-a.pp).slice(0,6).forEach(p=>{
+  const paid=getPaid(p), pct2=p.pp?Math.round(paid/p.pp*100):0;
+  const col=DCOLS[p.dev]||'#888';
+  const r=28, cxy=34, ci=2*Math.PI*r, da=ci*pct2/100;
+  ringsEl.innerHTML+=`<div style="text-align:center">
+    <svg width="68" height="68" viewBox="0 0 68 68" role="img" aria-label="${p.name} ${pct2}% paid">
+      <circle cx="${cxy}" cy="${cxy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="5"/>
+      <circle cx="${cxy}" cy="${cxy}" r="${r}" fill="none" stroke="${col}" stroke-width="5"
+        stroke-dasharray="${Math.round(da*10)/10} ${Math.round(ci*10)/10}"
+        stroke-dashoffset="${Math.round(ci/4*10)/10}" stroke-linecap="round"/>
+      <text x="${cxy}" y="${cxy+5}" text-anchor="middle" fill="${col}" font-size="12" font-family="DM Sans,sans-serif" font-weight="500">${pct2}%</text>
+    </svg>
+    <div style="font-size:9px;color:var(--muted);margin-top:2px;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name.slice(0,12)}</div>
+  </div>`;
+});
+
+// ══════════════════ CHARTS ══════════════════
+// Yearly
+const byYear={};
+PROPS.forEach(p=>p.pays.forEach(pay=>{
+  if(!pay.d)return;
+  const yr=new Date(pay.d).getFullYear();
+  if(!byYear[yr])byYear[yr]={paid:0,due:0};
+  if(pay.p)byYear[yr].paid+=pay.a; else byYear[yr].due+=pay.a;
+}));
+const yrs=Object.keys(byYear).sort();
+
+new Chart(document.getElementById('chartYearly'),{
+  type:'bar',
+  data:{
+    labels:yrs,
+    datasets:[
+      {label:'Paid',data:yrs.map(y=>Math.round(byYear[y].paid/1e6)),backgroundColor:'#1D9E75',borderRadius:4,borderSkipped:false},
+      {label:'Due',data:yrs.map(y=>Math.round(byYear[y].due/1e6)),backgroundColor:'#D85A30',borderRadius:4,borderSkipped:false}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'AED '+ctx.parsed.y+'M'}}},
+    scales:{
+      x:{stacked:true,grid:{display:false},ticks:{font:{size:10},color:'#9CA3AF',autoSkip:false}},
+      y:{stacked:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>v+'M',font:{size:10},color:'#9CA3AF'}}
+    }
+  }
+});
+
+// Donut
+const devEntries=Object.entries(devVal).sort((a,b)=>b[1]-a[1]);
+new Chart(document.getElementById('chartDev'),{
+  type:'doughnut',
+  data:{
+    labels:devEntries.map(d=>d[0].split(' ').slice(0,2).join(' ')),
+    datasets:[{data:devEntries.map(d=>Math.round(d[1]/1e6)),backgroundColor:devEntries.map(d=>DCOLS[d[0]]||'#888'),borderWidth:3,borderColor:'#fff'}]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,cutout:'68%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'AED '+ctx.parsed+'M'}}}
+  }
+});
+// Donut legend
+const devLeg=document.getElementById('devLegend');
+devEntries.forEach(([dev,val])=>{
+  const col=DCOLS[dev]||'#888';
+  devLeg.innerHTML+=`<div class="legend-item"><div class="legend-sq" style="background:${col}"></div>${dev.split(' ')[0]} — ${fs(val)}</div>`;
+});
+
+// Monthly 2026
+const monthly={};
+PROPS.forEach(p=>p.pays.forEach(pay=>{
+  if(!pay.d)return;
+  const d=new Date(pay.d);
+  if(d.getFullYear()===2026){const m=d.getMonth();monthly[m]=(monthly[m]||0)+pay.a;}
+}));
+const mData=MN.map((_,i)=>Math.round((monthly[i]||0)/1e6));
+new Chart(document.getElementById('chartMonthly'),{
+  type:'bar',
+  data:{labels:MN,datasets:[{label:'AED M',data:mData,backgroundColor:mData.map(v=>v>10?'#D85A30':v>5?'#BA7517':'#185FA5'),borderRadius:4}]},
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'AED '+ctx.parsed.y+'M'}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:9},color:'#9CA3AF',autoSkip:false,maxRotation:0}},
+      y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>v+'M',font:{size:9},color:'#9CA3AF'}}
+    }
+  }
+});
+
+// ── Year filter (UI only) ──
+window.setYr=function(yr,btn){
+  document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prasanna Properties — Portfolio Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#B8960C;--gold-bg:rgba(184,150,12,0.1);
+  --green:#1D9E75;--green-bg:rgba(29,158,117,0.1);
+  --red:#D85A30;--red-bg:rgba(216,90,48,0.1);
+  --blue:#185FA5;--blue-bg:rgba(24,95,165,0.1);
+  --bg:#0D0F12;--surface:#13171C;--surface2:#1A1F26;--surface3:#20262F;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#F2EDE4;--muted:#8A8278;--dim:#4E4A45;
+}
+body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--bg);min-height:100vh}
+
+.app-wrap{max-width:1200px;margin:0 auto;padding:24px 20px}
+
+.app-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.app-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#C9A84C;letter-spacing:.02em}
+.app-sub{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
+.header-right{display:flex;align-items:center;gap:12px}
+.save-indicator{font-size:11px;color:var(--green);opacity:0;transition:opacity .3s;font-family:'DM Mono',monospace}
+.save-indicator.show{opacity:1}
+.header-date{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+
+.nav{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto}
+.tab{padding:11px 18px;font-size:12px;cursor:pointer;border:none;border-bottom:2px solid transparent;color:var(--muted);background:none;font-family:'DM Sans',sans-serif;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase;transition:all .2s}
+.tab.on{color:#C9A84C;border-bottom-color:#C9A84C}
+.tab:hover{color:var(--text)}
+
+.sec{display:none}.sec.on{display:block}
+
+/* KPI CARDS */
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px}
+.kcard{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px;position:relative;overflow:hidden;transition:border-color .2s}
+.kcard:hover{border-color:var(--border2)}
+.klabel{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+.kval{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--text);line-height:1}
+.kval.g{color:var(--green)}.kval.r{color:var(--red)}.kval.b{color:var(--blue)}.kval.go{color:#C9A84C}
+.ksub{font-size:10px;color:var(--muted);margin-top:4px}
+.btrack{height:3px;background:var(--surface3);border-radius:2px;margin-top:8px;overflow:hidden}
+.bfill{height:3px;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* CHART CARDS */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px}
+.ctitle{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+
+.devrow{margin-bottom:8px}
+.devlabel{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.devname{color:var(--text);font-weight:500}
+.devct{color:var(--muted)}
+.dtrack{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.dfill{height:4px;border-radius:2px;transition:width .8s ease}
+
+.donut-wrap{display:flex;align-items:center;gap:16px}
+.legend{display:flex;flex-direction:column;gap:5px;flex:1}
+.litem{display:flex;align-items:center;gap:6px;font-size:10px}
+.ldot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.lname{flex:1;color:var(--muted)}
+.lval{color:var(--text);font-family:'DM Mono',monospace;font-size:9px}
+
+/* PROGRESS RINGS */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:16px}
+.pcard{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:12px;text-align:center;transition:border-color .2s}
+.pcard:hover{border-color:var(--border2)}
+.pname{font-size:10px;font-weight:500;margin-top:6px;color:var(--text)}
+.pamt{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px}
+
+.stitle{font-size:12px;font-weight:600;color:#C9A84C;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);font-family:'Playfair Display',serif;letter-spacing:.02em}
+
+/* UPCOMING */
+.uitem{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;gap:10px;transition:border-color .2s}
+.uitem:hover{border-color:var(--border2)}
+.uprop{font-size:12px;font-weight:500;color:var(--text)}
+.uinst{font-size:10px;color:var(--muted)}
+.uamt{font-size:13px;font-weight:600;font-family:'DM Mono',monospace;text-align:right;color:var(--text)}
+.udate{font-size:10px;font-family:'DM Mono',monospace;text-align:right}
+
+/* TABLE */
+.scroll-x{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-weight:400;white-space:nowrap;font-family:'DM Mono',monospace}
+td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;color:var(--text)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,0.02)}
+
+.badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:500;letter-spacing:.04em;font-family:'DM Mono',monospace}
+
+/* BUTTONS */
+.btn{padding:7px 14px;border:1px solid var(--border2);border-radius:4px;background:transparent;font-size:11px;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif;transition:all .15s;letter-spacing:.02em}
+.btn:hover{background:var(--surface2);border-color:rgba(255,255,255,0.25)}
+.btn.primary{background:rgba(184,150,12,0.12);border-color:#B8960C;color:#C9A84C}
+.btn.primary:hover{background:#B8960C;color:#000}
+.btn.danger{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.btn.danger:hover{background:var(--red);color:#fff}
+.btn.success{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.btn.success:hover{background:var(--green);color:#fff}
+.btn.small{padding:4px 9px;font-size:10px}
+.btn.ghost{border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--surface2);color:var(--text);border-color:var(--border)}
+
+/* FILTER BUTTONS */
+.filters{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.fbtn{padding:5px 11px;border:1px solid var(--border);border-radius:4px;background:transparent;font-size:10px;cursor:pointer;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.04em;transition:all .15s}
+.fbtn.on{background:rgba(24,95,165,0.15);color:#5B9BD5;border-color:#185FA5}
+.fbtn:hover{color:var(--text);border-color:var(--border2)}
+
+/* PAYMENT TIMELINE */
+.ysec{margin-bottom:20px}
+.yhdr{display:flex;align-items:baseline;gap:12px;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.yyr{font-size:22px;font-weight:700;color:var(--dim);font-family:'Playfair Display',serif}
+.ytot{font-size:12px;color:var(--text);font-family:'DM Mono',monospace}
+
+.mrow{display:grid;grid-template-columns:46px 1fr;gap:8px;margin-bottom:5px;align-items:start}
+.mlabel{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;padding-top:10px;line-height:1.3}
+.mpays{display:flex;flex-direction:column;gap:4px}
+.pitem{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;border:1px solid var(--border);border-radius:4px;background:var(--surface);gap:8px;transition:all .2s}
+.pitem:hover{border-color:var(--border2)}
+.pitem.paid-item{opacity:.45;background:var(--surface2);border-style:dashed}
+.pinf{flex:1}
+.pprop{font-size:11px;font-weight:500;color:var(--text)}
+.pinst{font-size:10px;color:var(--muted)}
+.pamt2{font-size:11px;font-family:'DM Mono',monospace;text-align:right;white-space:nowrap;color:var(--text)}
+.pdate2{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-align:right}
+
+/* YEARLY BARS */
+.ybar-row{display:flex;gap:10px;align-items:flex-end;height:110px;margin-bottom:14px}
+.ybar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.ybar{width:100%;border-radius:3px 3px 0 0;min-height:4px;transition:height .6s ease}
+.yba{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-align:center}
+.ybyr{font-size:10px;color:var(--dim);font-family:'DM Mono',monospace}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#C9A84C;margin-bottom:18px}
+.form-group{margin-bottom:13px}
+.form-label{font-size:10px;color:var(--muted);margin-bottom:4px;display:block;letter-spacing:.06em;text-transform:uppercase;font-family:'DM Mono',monospace}
+.form-input{width:100%;padding:9px 11px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .15s}
+.form-input:focus{border-color:#B8960C}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pay-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.pay-row input{padding:7px 9px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:11px;font-family:'DM Sans',sans-serif;width:100%;outline:none}
+.pay-row input:focus{border-color:#B8960C}
+.pay-row select{padding:7px 9px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:11px;font-family:'DM Sans',sans-serif;width:100%;outline:none}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.pay-cols{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:4px;margin-bottom:5px}
+.pay-col-label{font-size:9px;color:var(--dim);padding:0 2px;font-family:'DM Mono',monospace;text-transform:uppercase}
+
+.action-row{display:flex;gap:8px;justify-content:flex-end;margin-bottom:14px}
+.prop-actions{display:flex;gap:4px}
+.empty{text-align:center;padding:30px;color:var(--muted);font-size:12px}
+.tag-paid{background:rgba(29,158,117,0.15);color:#1D9E75}
+.tag-due{background:rgba(184,150,12,0.12);color:#C9A84C}
+
+@media(max-width:700px){
+  .row2{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .kgrid{grid-template-columns:repeat(2,1fr)}
+  .app-wrap{padding:14px 12px}
+  .modal{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+
+  <div class="app-header">
+    <div>
+      <div class="app-title">PRASANNA</div>
+      <div class="app-sub">Property Portfolio · Dubai</div>
+    </div>
+    <div class="header-right">
+      <span class="save-indicator" id="saveInd">✓ Saved</span>
+      <span class="header-date" id="currentDate"></span>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="tab on" onclick="show('dash',this)">Dashboard</button>
+    <button class="tab" onclick="show('props',this)">Properties</button>
+    <button class="tab" onclick="show('pay',this)">Payments</button>
+    <button class="tab" onclick="show('yr',this)">Yearly</button>
+  </div>
+
+  <div id="dash" class="sec on"></div>
+  <div id="props" class="sec"></div>
+  <div id="pay" class="sec"></div>
+  <div id="yr" class="sec"></div>
+
+  <div id="modalContainer"></div>
+
+</div>
+
+<script>
+// ============================================================
+// DEFAULT DATA
+// ============================================================
+const DEFAULT_PROPS = [
+  {id:1,name:"District One West",code:"D1W-P1-V-A162",dev:"NAKHEEL",beds:"6 Bed Villa",pp:30670000,ho:"Q4-2027",
+   pays:[{l:"Booking",a:6134000,d:"2023-09-01",p:1},{l:"1st Installment",a:4600500,d:"2023-09-01",p:1},{l:"2nd Installment",a:3067000,d:"2024-03-01",p:1},{l:"3rd Installment",a:3067000,d:"2024-09-01",p:1},{l:"4th Installment",a:3067000,d:"2025-03-01",p:1},{l:"5th Installment",a:3067000,d:"2025-09-01",p:0},{l:"6th Installment",a:1533500,d:"2026-03-01",p:0},{l:"Final Installment",a:6134000,d:"2027-10-01",p:0}]},
+  {id:2,name:"Palm Jebel Ali 89",code:"PJA-FRL-V089",dev:"NAKHEEL",beds:"5 Bed Villa",pp:21398800,ho:"Q4-2027",
+   pays:[{l:"Booking",a:4279760,d:"2024-03-15",p:1},{l:"1st",a:2139880,d:"2024-03-15",p:1},{l:"2nd",a:2139880,d:"2024-07-15",p:1},{l:"3rd",a:2139880,d:"2025-01-15",p:1},{l:"4th",a:2139880,d:"2025-07-15",p:1},{l:"5th",a:2139880,d:"2026-01-15",p:0},{l:"6th",a:2139880,d:"2026-07-15",p:0},{l:"Final",a:4279760,d:"2027-10-01",p:0}]},
+  {id:3,name:"Palm Jebel Ali 110",code:"PJA-FRL-V110",dev:"NAKHEEL",beds:"5 Bed Villa",pp:21398800,ho:"Q4-2027",
+   pays:[{l:"Booking",a:4279760,d:"2024-09-15",p:1},{l:"1st",a:3209820,d:"2024-09-15",p:1},{l:"2nd",a:3209820,d:"2025-02-15",p:1},{l:"3rd",a:2139880,d:"2025-07-15",p:1},{l:"4th",a:2139880,d:"2025-12-15",p:0},{l:"5th",a:2139880,d:"2026-05-15",p:0},{l:"Final",a:4279760,d:"2027-10-01",p:0}]},
+  {id:4,name:"Palm Jebel Ali 98",code:"PJA-FRK-V98",dev:"NAKHEEL",beds:"7 Bed Villa",pp:43668800,ho:"Q4-2027",
+   pays:[{l:"Booking",a:8733760,d:"2025-03-15",p:1},{l:"1st",a:4366880,d:"2025-03-15",p:1},{l:"2nd",a:4366880,d:"2025-09-15",p:0},{l:"3rd",a:4366880,d:"2026-03-15",p:0},{l:"4th",a:4366880,d:"2026-09-15",p:0},{l:"5th",a:4366880,d:"2027-03-15",p:0},{l:"6th",a:4366880,d:"2027-06-15",p:0},{l:"Final",a:8733760,d:"2027-10-01",p:0}]},
+  {id:5,name:"Serenity Mansion",code:"TAG-SM2-025",dev:"MAJID AL FUTTAIM",beds:"6 Bed Mansion",pp:28963000,ho:"Dec 2026",
+   pays:[{l:"Booking",a:2896300,d:"2024-04-22",p:1},{l:"2nd",a:2896300,d:"2024-07-15",p:1},{l:"3rd",a:1448150,d:"2025-04-15",p:1},{l:"4th",a:1448150,d:"2025-08-15",p:1},{l:"5th",a:2896300,d:"2025-11-15",p:0},{l:"6th",a:1448150,d:"2026-02-15",p:0},{l:"7th",a:1448150,d:"2026-05-15",p:0},{l:"8th",a:2896300,d:"2026-08-15",p:0},{l:"Final",a:11585200,d:"2026-12-15",p:0}]},
+  {id:6,name:"Lanai Island",code:"TAG-IE2.01",dev:"MAJID AL FUTTAIM",beds:"6 Bed Mansion",pp:66454700,ho:"Nov 2026",
+   pays:[{l:"Booking",a:6645470,d:"2024-03-04",p:1},{l:"2nd",a:6645470,d:"2024-07-15",p:1},{l:"3rd",a:6645470,d:"2024-11-15",p:1},{l:"4th",a:6645470,d:"2025-03-15",p:1},{l:"5th",a:6645470,d:"2025-06-15",p:1},{l:"6th",a:6645470,d:"2025-09-15",p:0},{l:"7th",a:6645470,d:"2025-12-15",p:0},{l:"8th",a:6645470,d:"2026-03-15",p:0},{l:"9th",a:6645470,d:"2026-06-15",p:0},{l:"Final",a:6645470,d:"2026-11-15",p:0}]},
+  {id:7,name:"Ghaf Woods Cilia",code:"GW-CILIA",dev:"MAJID AL FUTTAIM",beds:"5 Apts (1-2 Bed)",pp:11008000,ho:"Sep 2027",
+   pays:[{l:"Booking",a:1100800,d:"2024-06-11",p:1},{l:"2nd",a:1100800,d:"2024-09-15",p:1},{l:"3rd",a:550400,d:"2025-01-15",p:1},{l:"4th",a:550400,d:"2025-05-15",p:1},{l:"5th",a:1100800,d:"2025-09-15",p:0},{l:"6th",a:550400,d:"2026-01-15",p:0},{l:"7th",a:550400,d:"2026-07-15",p:0},{l:"8th",a:550400,d:"2027-01-15",p:0},{l:"9th",a:550400,d:"2027-05-15",p:0},{l:"Final",a:4403200,d:"2027-09-15",p:0}]},
+  {id:8,name:"Golf Lane",code:"EMAAR-GL",dev:"EMAAR",beds:"2 THs 4 Bed",pp:9863776,ho:"Oct 2028",
+   pays:[{l:"Booking",a:1972755,d:"2024-06-01",p:1},{l:"2nd",a:986378,d:"2024-12-30",p:1},{l:"3rd",a:986378,d:"2025-06-30",p:1},{l:"10% Const",a:986378,d:"2026-01-12",p:0},{l:"20% Const",a:986378,d:"2026-07-01",p:0},{l:"40% Const",a:986378,d:"2027-01-20",p:0},{l:"60% Const",a:986378,d:"2027-07-15",p:0},{l:"100% Const",a:1972755,d:"2028-10-31",p:0}]},
+  {id:9,name:"La Tilia",code:"LT-695-700",dev:"DUBAI PROPERTIES",beds:"6 THs (3-4 Bed)",pp:20327000,ho:"Sep 2028",
+   pays:[{l:"Booking",a:4065400,d:"2024-11-23",p:1},{l:"2nd",a:2032700,d:"2025-08-15",p:1},{l:"3rd",a:1016350,d:"2025-11-15",p:0},{l:"4th",a:2032700,d:"2026-04-15",p:0},{l:"5th",a:2032700,d:"2026-09-15",p:0},{l:"6th",a:1016350,d:"2027-02-15",p:0},{l:"100% Const",a:8130800,d:"2028-09-15",p:0}]},
+  {id:10,name:"Vida Club Point",code:"DH-VCP",dev:"EMAAR",beds:"4 Apts (1-3 Bed)",pp:11073552,ho:"Feb 2029",
+   pays:[{l:"Booking",a:2214710,d:"2024-11-26",p:1},{l:"2nd",a:1107355,d:"2025-06-30",p:1},{l:"3rd",a:1107355,d:"2025-11-30",p:0},{l:"20% Const",a:1107355,d:"2026-06-03",p:0},{l:"30% Const",a:553678,d:"2026-10-06",p:0},{l:"50% Const",a:1107355,d:"2027-05-19",p:0},{l:"70% Const",a:553678,d:"2027-11-23",p:0},{l:"90% Const",a:1107355,d:"2028-07-18",p:0},{l:"100% Const",a:2214710,d:"2029-02-28",p:0}]},
+  {id:11,name:"Elysian Mansion 8",code:"TAG-EM1-LM008",dev:"MAJID AL FUTTAIM",beds:"6 Bed Mansion",pp:44253000,ho:"2026",
+   pays:[{l:"Booking",a:8850600,d:"2024-12-02",p:1},{l:"2nd",a:6637950,d:"2025-03-15",p:1},{l:"3rd",a:6637950,d:"2025-06-15",p:1},{l:"4th Installment",a:22126500,d:"2026-06-01",p:0}]},
+  {id:12,name:"Serenity ARA 32",code:"TAG-SM1-032",dev:"MAJID AL FUTTAIM",beds:"6 Bed Mansion",pp:37026000,ho:"Jun 2027",
+   pays:[{l:"Booking",a:3702600,d:"2024-12-04",p:1},{l:"2nd",a:3702600,d:"2025-03-15",p:1},{l:"3rd",a:1851300,d:"2025-06-15",p:1},{l:"4th",a:1851300,d:"2025-09-15",p:0},{l:"5th",a:1851300,d:"2025-12-15",p:0},{l:"6th",a:1851300,d:"2026-03-15",p:0},{l:"7th",a:1851300,d:"2026-06-15",p:0},{l:"8th",a:1851300,d:"2026-09-15",p:0},{l:"9th",a:1851300,d:"2026-12-15",p:0},{l:"10th",a:1851300,d:"2027-03-15",p:0},{l:"Final",a:14810400,d:"2027-06-15",p:0}]},
+  {id:13,name:"DH Hills Edge",code:"HE-A-1501-1607",dev:"EMAAR",beds:"14 Apts (1-2 Bed)",pp:33060720,ho:"Jan 2029",
+   pays:[{l:"Booking (40%)",a:13224288,d:"2024-12-17",p:1},{l:"30% Const",a:3306072,d:"2026-07-01",p:0},{l:"50% Const",a:3306072,d:"2027-01-13",p:0},{l:"70% Const",a:3306072,d:"2027-06-15",p:0},{l:"90% Const",a:3306072,d:"2028-01-18",p:0},{l:"100% Const",a:6612144,d:"2029-01-31",p:0}]},
+  {id:14,name:"ES Golf Acres",code:"EMAAR-SOUTH-GA",dev:"EMAAR",beds:"6 Apts (1-3 Bed)",pp:12444328,ho:"Dec 2028",
+   pays:[{l:"Booking",a:2488866,d:"2024-12-23",p:1},{l:"2nd",a:1244433,d:"2025-04-18",p:1},{l:"3rd",a:1244433,d:"2026-01-18",p:0},{l:"20% Const",a:1244433,d:"2026-08-20",p:0},{l:"40% Const",a:1244433,d:"2027-02-06",p:0},{l:"60% Const",a:1244433,d:"2027-07-03",p:0},{l:"90% Const",a:1244433,d:"2028-02-24",p:0},{l:"100% Const",a:2488866,d:"2028-12-31",p:0}]},
+  {id:15,name:"Bristol Beachfront",code:"EMAAR-BF-BRIS",dev:"EMAAR",beds:"3 Apts (2-4 Bed)",pp:31364664,ho:"Sep 2029",
+   pays:[{l:"Booking",a:3136466,d:"2025-01-30",p:1},{l:"2nd",a:3136466,d:"2025-03-30",p:1},{l:"3rd",a:3136466,d:"2025-08-30",p:1},{l:"4th",a:3136466,d:"2026-03-30",p:0},{l:"5th",a:3136466,d:"2026-08-30",p:0},{l:"30% Const",a:3136466,d:"2027-04-04",p:0},{l:"50% Const",a:3136466,d:"2027-11-12",p:0},{l:"80% Const",a:3136466,d:"2028-08-09",p:0},{l:"100% Const",a:6272933,d:"2029-09-30",p:0}]},
+  {id:16,name:"Address Tierra Oasis",code:"AT-OASIS",dev:"EMAAR",beds:"4 Villas (4-6 Bed)",pp:77217552,ho:"Jun 2029",
+   pays:[{l:"Booking",a:7721755,d:"2025-03-08",p:1},{l:"2nd",a:7721755,d:"2025-07-10",p:1},{l:"3rd",a:7721755,d:"2026-01-10",p:0},{l:"4th",a:7721755,d:"2026-06-10",p:0},{l:"5th",a:7721755,d:"2027-01-02",p:0},{l:"30% Const",a:7721755,d:"2027-06-02",p:0},{l:"50% Const",a:7721755,d:"2028-02-15",p:0},{l:"80% Const",a:7721755,d:"2028-09-16",p:0},{l:"100% Const",a:15443510,d:"2029-06-30",p:0}]},
+  {id:17,name:"Grand Polo Chavelia",code:"GP-CHAVELIA",dev:"EMAAR",beds:"2 Villas 5 Bed",pp:30254776,ho:"Apr 2029",
+   pays:[{l:"Booking",a:3025478,d:"2025-04-30",p:1},{l:"2nd",a:3025478,d:"2025-07-01",p:1},{l:"3rd",a:3025478,d:"2026-01-01",p:0},{l:"4th",a:3025478,d:"2026-06-01",p:0},{l:"5th",a:3025478,d:"2027-01-01",p:0},{l:"30% Const",a:3025478,d:"2027-06-26",p:0},{l:"50% Const",a:3025478,d:"2028-02-16",p:0},{l:"80% Const",a:3025478,d:"2028-05-24",p:0},{l:"100% Const",a:6050955,d:"2029-04-30",p:0}]},
+  {id:18,name:"Hammock Park",code:"DIVINE-HP",dev:"DIVINE ONE",beds:"4 Apts (1-2 Bed)",pp:5601390,ho:"Mar 2027",
+   pays:[{l:"Booking",a:2240556,d:"2025-04-30",p:1},{l:"12-mo Install",a:280070,d:"2025-10-16",p:0},{l:"40% Progress",a:280070,d:"2025-12-15",p:0},{l:"50% Progress",a:280070,d:"2026-03-15",p:0},{l:"60% Progress",a:280070,d:"2026-06-15",p:0},{l:"70% Progress",a:280070,d:"2026-09-15",p:0},{l:"80% Progress",a:280070,d:"2026-12-15",p:0},{l:"100% Const",a:1680417,d:"2027-03-01",p:0}]},
+  {id:19,name:"Capria Ghaf Woods",code:"TAG-CAPRIA",dev:"TILAL AL GHAF",beds:"6 Apts (1-3 Bed)",pp:14973000,ho:"Jun 2029",
+   pays:[{l:"Booking",a:1497300,d:"2025-04-21",p:1},{l:"2nd",a:748650,d:"2025-08-15",p:1},{l:"3rd",a:748650,d:"2026-01-15",p:0},{l:"4th",a:748650,d:"2026-06-15",p:0},{l:"5th",a:748650,d:"2026-12-15",p:0},{l:"6th",a:1497300,d:"2027-06-15",p:0},{l:"7th",a:748650,d:"2027-12-15",p:0},{l:"8th",a:1497300,d:"2028-06-15",p:0},{l:"9th",a:748650,d:"2028-12-15",p:0},{l:"100% Const",a:5989200,d:"2029-06-15",p:0}]}
+];
+
+// ============================================================
+// CONFIG
+// ============================================================
+const DCOLS = {
+  "EMAAR":"#185FA5","MAJID AL FUTTAIM":"#B8960C","NAKHEEL":"#1D9E75",
+  "DUBAI PROPERTIES":"#534AB7","DIVINE ONE":"#993C1D","TILAL AL GHAF":"#993556"
+};
+const DBGS = {
+  "EMAAR":"rgba(24,95,165,0.15)","MAJID AL FUTTAIM":"rgba(184,150,12,0.15)",
+  "NAKHEEL":"rgba(29,158,117,0.15)","DUBAI PROPERTIES":"rgba(83,74,183,0.15)",
+  "DIVINE ONE":"rgba(153,60,29,0.15)","TILAL AL GHAF":"rgba(153,53,86,0.15)"
+};
+const YCOLORS = {'2025':'#185FA5','2026':'#B8960C','2027':'#1D9E75','2028':'#534AB7','2029':'#993C1D','2030':'#993556'};
+const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ============================================================
+// STATE
+// ============================================================
+let PROPS = [];
+let nextId = 20;
+const today = new Date();
+
+// ============================================================
+// HELPERS
+// ============================================================
+function fm(n) {
+  if (!n) return 'AED 0';
+  n = Math.round(n);
+  if (n >= 1e9) return 'AED ' + (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return 'AED ' + (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return 'AED ' + (n/1e3).toFixed(0) + 'K';
+  return 'AED ' + n.toLocaleString();
+}
+function fs(n) {
+  n = Math.round(n);
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(0) + 'K';
+  return n.toLocaleString();
+}
+function fd(s) {
+  try { const d = new Date(s); if (isNaN(d)) return s; return MN[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); }
+  catch(e) { return s; }
+}
+function getPaid(p) { return p.pays.filter(x => x.p).reduce((s, x) => s + (x.a || 0), 0); }
+function getDue(p) { return p.pays.filter(x => !x.p).reduce((s, x) => s + (x.a || 0), 0); }
+function getDevColor(dev) { return DCOLS[dev] || '#888'; }
+function getDevBg(dev) { return DBGS[dev] || 'rgba(136,136,136,0.15)'; }
+
+// ============================================================
+// STORAGE (localStorage for standalone HTML)
+// ============================================================
+function save() {
+  try {
+    localStorage.setItem('pp_properties', JSON.stringify(PROPS));
+    localStorage.setItem('pp_nextid', String(nextId));
+    const ind = document.getElementById('saveInd');
+    ind.classList.add('show');
+    setTimeout(() => ind.classList.remove('show'), 2000);
+  } catch(e) { console.warn('Storage:', e); }
+}
+
+function load() {
+  try {
+    const r = localStorage.getItem('pp_properties');
+    const ri = localStorage.getItem('pp_nextid');
+    if (r) { PROPS = JSON.parse(r); } else { PROPS = JSON.parse(JSON.stringify(DEFAULT_PROPS)); }
+    if (ri) nextId = parseInt(ri) || 20;
+  } catch(e) {
+    PROPS = JSON.parse(JSON.stringify(DEFAULT_PROPS));
+  }
+  render();
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function show(id, btn) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+  if (id === 'dash') buildDash();
+  if (id === 'props') buildProps();
+  if (id === 'pay') buildPay();
+  if (id === 'yr') buildYr();
+}
+
+function render() {
+  buildDash();
+  const activeTab = document.querySelector('.tab.on');
+  if (activeTab) {
+    const label = activeTab.textContent.trim().toLowerCase();
+    if (label === 'properties') buildProps();
+    if (label === 'payments') buildPay();
+    if (label === 'yearly') buildYr();
+  }
+}
+
+// ============================================================
+// TOGGLE PAID
+// ============================================================
+function togglePaid(propId, payIdx) {
+  const p = PROPS.find(x => x.id === propId);
+  if (!p) return;
+  p.pays[payIdx].p = p.pays[payIdx].p ? 0 : 1;
+  save();
+  render();
+  const activeId = document.querySelector('.sec.on')?.id;
+  if (activeId === 'pay') buildPay();
+}
+
+// ============================================================
+// DELETE PROPERTY
+// ============================================================
+function deleteProperty(id) {
+  if (!confirm('Delete this property and all its payment data?')) return;
+  PROPS = PROPS.filter(p => p.id !== id);
+  save(); render();
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function closeModal() { document.getElementById('modalContainer').innerHTML = ''; }
+
+function showAddProperty(editId) {
+  const existing = editId ? PROPS.find(p => p.id === editId) : null;
+  window._editPays = existing ? existing.pays.map(p => ({...p})) : [{l:'Booking',a:'',d:'',p:0}];
+  window._editId = editId || null;
+
+  function renderPayRows() {
+    return window._editPays.map((pay, i) => `
+      <div class="pay-row" id="pr${i}">
+        <input placeholder="Label e.g. Booking" value="${pay.l||''}" oninput="window._editPays[${i}].l=this.value">
+        <input placeholder="Amount AED" type="number" value="${pay.a||''}" oninput="window._editPays[${i}].a=+this.value">
+        <input type="date" value="${pay.d||''}" oninput="window._editPays[${i}].d=this.value">
+        <button class="btn danger small" onclick="removePayRow(${i})">×</button>
+      </div>`).join('');
+  }
+
+  const devList = [...new Set(PROPS.map(p => p.dev))];
+
+  document.getElementById('modalContainer').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-title">${existing ? 'Edit' : 'Add New'} Property</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Property name *</label>
+          <input class="form-input" id="f_name" placeholder="e.g. Palm Jebel Ali 45" value="${existing ? existing.name : ''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unit / code</label>
+          <input class="form-input" id="f_code" placeholder="e.g. PJA-V045" value="${existing ? existing.code : ''}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Developer</label>
+          <input class="form-input" id="f_dev" placeholder="e.g. EMAAR" value="${existing ? existing.dev : ''}" list="devlist">
+          <datalist id="devlist">${devList.map(d => `<option value="${d}">`).join('')}</datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type / beds</label>
+          <input class="form-input" id="f_beds" placeholder="e.g. 5 Bed Villa" value="${existing ? existing.beds : ''}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Purchase price (AED) *</label>
+          <input class="form-input" id="f_pp" type="number" placeholder="e.g. 15000000" value="${existing ? existing.pp : ''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Handover</label>
+          <input class="form-input" id="f_ho" placeholder="e.g. Q4-2027" value="${existing ? existing.ho : ''}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <label class="form-label" style="margin:0">Payment schedule</label>
+          <button class="btn small primary" onclick="addPayRow()">+ Add installment</button>
+        </div>
+        <div class="pay-cols">
+          <div class="pay-col-label">Label</div>
+          <div class="pay-col-label">Amount (AED)</div>
+          <div class="pay-col-label">Due date</div>
+          <div></div>
+        </div>
+        <div id="payRowsContainer">${renderPayRows()}</div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveProperty()">Save property</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+window.addPayRow = function() {
+  window._editPays.push({l:'',a:'',d:'',p:0});
+  const i = window._editPays.length - 1;
+  const c = document.getElementById('payRowsContainer');
+  const div = document.createElement('div');
+  div.className = 'pay-row'; div.id = 'pr' + i;
+  div.innerHTML = `
+    <input placeholder="Label" oninput="window._editPays[${i}].l=this.value">
+    <input placeholder="Amount AED" type="number" oninput="window._editPays[${i}].a=+this.value">
+    <input type="date" oninput="window._editPays[${i}].d=this.value">
+    <button class="btn danger small" onclick="removePayRow(${i})">×</button>`;
+  c.appendChild(div);
+};
+
+window.removePayRow = function(i) {
+  window._editPays.splice(i, 1);
+  const el = document.getElementById('pr' + i);
+  if (el) el.remove();
+  document.querySelectorAll('#payRowsContainer .pay-row').forEach((r, idx) => r.id = 'pr' + idx);
+};
+
+window.saveProperty = function() {
+  const name = document.getElementById('f_name').value.trim();
+  const code = document.getElementById('f_code').value.trim();
+  const dev = document.getElementById('f_dev').value.trim().toUpperCase();
+  const beds = document.getElementById('f_beds').value.trim();
+  const pp = parseFloat(document.getElementById('f_pp').value) || 0;
+  const ho = document.getElementById('f_ho').value.trim();
+  if (!name) { alert('Property name is required'); return; }
+  if (!pp) { alert('Purchase price is required'); return; }
+  const pays = window._editPays.filter(p => p.l || p.a);
+  if (window._editId) {
+    const idx = PROPS.findIndex(p => p.id === window._editId);
+    if (idx >= 0) PROPS[idx] = {...PROPS[idx], name, code, dev, beds, pp, ho, pays};
+  } else {
+    PROPS.push({id: nextId++, name, code, dev, beds, pp, ho, pays});
+  }
+  closeModal(); save(); render();
+};
+
+// ============================================================
+// BUILD DASHBOARD
+// ============================================================
+function buildDash() {
+  const el = document.getElementById('dash');
+  const totalPP = PROPS.reduce((s, p) => s + p.pp, 0);
+  const totalPaid = PROPS.reduce((s, p) => s + getPaid(p), 0);
+  const totalDue = PROPS.reduce((s, p) => s + getDue(p), 0);
+  const pct = totalPP ? Math.round(totalPaid / totalPP * 100) : 0;
+  const devs = [...new Set(PROPS.map(p => p.dev))].length;
+
+  let html = `<div class="kgrid">
+    <div class="kcard"><div class="klabel">Total Properties</div><div class="kval go">${PROPS.length}</div><div class="ksub">${devs} developers</div></div>
+    <div class="kcard"><div class="klabel">Total Investment</div><div class="kval" style="font-size:16px">${fm(totalPP)}</div></div>
+    <div class="kcard"><div class="klabel">Total Paid</div><div class="kval g" style="font-size:16px">${fm(totalPaid)}</div></div>
+    <div class="kcard"><div class="klabel">Balance Due</div><div class="kval r" style="font-size:16px">${fm(totalDue)}</div></div>
+    <div class="kcard"><div class="klabel">% Paid</div><div class="kval b">${pct}%</div><div class="btrack"><div class="bfill" style="width:${pct}%;background:var(--blue)"></div></div></div>
+  </div>`;
+
+  // Developer bars
+  const devCount = {}, devVal = {};
+  PROPS.forEach(p => { devCount[p.dev] = (devCount[p.dev]||0)+1; devVal[p.dev] = (devVal[p.dev]||0)+p.pp; });
+  const devArr = Object.entries(devCount).sort((a,b) => b[1]-a[1]);
+  const maxC = Math.max(...devArr.map(d => d[1]));
+
+  // Donut
+  const donutData = PROPS.slice().sort((a,b) => b.pp-a.pp).slice(0,7);
+  const dTotal = donutData.reduce((s,p) => s+p.pp, 0);
+  const dColors = Object.values(DCOLS);
+  let cx=60, cy=60, r=50, inner=30, ang=-90, paths='';
+  donutData.forEach((p, i) => {
+    const pt = p.pp/dTotal, deg = pt*360, rd = Math.PI/180;
+    const x1=cx+r*Math.cos(ang*rd), y1=cy+r*Math.sin(ang*rd);
+    const x2=cx+inner*Math.cos(ang*rd), y2=cy+inner*Math.sin(ang*rd);
+    const ea=ang+deg, x3=cx+r*Math.cos(ea*rd), y3=cy+r*Math.sin(ea*rd), x4=cx+inner*Math.cos(ea*rd), y4=cy+inner*Math.sin(ea*rd);
+    paths += `<path d="M${x1},${y1} A${r},${r} 0 ${deg>180?1:0},1 ${x3},${y3} L${x4},${y4} A${inner},${inner} 0 ${deg>180?1:0},0 ${x2},${y2} Z" fill="${dColors[i%dColors.length]}" opacity="0.9"/>`;
+    ang = ea;
+  });
+
+  html += `<div class="row2">
+    <div class="card"><div class="ctitle">By Developer</div>`;
+  devArr.forEach(([dev, cnt]) => {
+    const col = getDevColor(dev);
+    html += `<div class="devrow">
+      <div class="devlabel"><span class="devname">${dev.split(' ').map(w=>w[0]+w.slice(1).toLowerCase()).join(' ')}</span>
+      <span class="devct">${cnt} propert${cnt>1?'ies':'y'} · ${fs(devVal[dev])}</span></div>
+      <div class="dtrack"><div class="dfill" style="width:${Math.round(cnt/maxC*100)}%;background:${col}"></div></div>
+    </div>`;
+  });
+  html += `</div>
+    <div class="card"><div class="ctitle">Investment by Project</div>
+      <div class="donut-wrap">
+        <svg width="120" height="120" viewBox="0 0 120 120">${paths}
+          <circle cx="${cx}" cy="${cy}" r="${inner-2}" fill="var(--surface)"/>
+        </svg>
+        <div class="legend">${donutData.map((p,i) => `
+          <div class="litem"><div class="ldot" style="background:${dColors[i%dColors.length]}"></div>
+          <span class="lname">${p.name.slice(0,18)}</span>
+          <span class="lval">${fs(p.pp)}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // Progress rings
+  html += `<div class="stitle">Payment Progress — Top Properties</div><div class="pgrid">`;
+  PROPS.slice().sort((a,b) => b.pp-a.pp).slice(0,8).forEach(p => {
+    const paid = getPaid(p), pct2 = p.pp ? Math.round(paid/p.pp*100) : 0;
+    const r2=32, cxy=38, ci=2*Math.PI*r2, da=ci*pct2/100, col=getDevColor(p.dev);
+    html += `<div class="pcard">
+      <svg width="76" height="76" viewBox="0 0 76 76">
+        <circle cx="${cxy}" cy="${cxy}" r="${r2}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
+        <circle cx="${cxy}" cy="${cxy}" r="${r2}" fill="none" stroke="${col}" stroke-width="5"
+          stroke-dasharray="${da} ${ci}" stroke-dashoffset="${ci/4}" stroke-linecap="round"/>
+        <text x="${cxy}" y="${cxy+5}" text-anchor="middle" fill="${col}" font-size="13" font-weight="700">${pct2}%</text>
+      </svg>
+      <div class="pname">${p.name.slice(0,16)}</div>
+      <div class="pamt">${fs(paid)} / ${fs(p.pp)}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Upcoming payments
+  const future90 = new Date(today); future90.setDate(future90.getDate()+90);
+  const upcoming = [];
+  PROPS.forEach(p => p.pays.forEach((pay, pi) => {
+    if (!pay.p && pay.d) { const d = new Date(pay.d); if (d>=today && d<=future90) upcoming.push({...pay, pname:p.name, pid:p.id, pi}); }
+  }));
+  upcoming.sort((a,b) => new Date(a.d)-new Date(b.d));
+
+  html += `<div class="stitle" style="margin-top:20px">Upcoming Payments — Next 90 Days</div>`;
+  if (!upcoming.length) {
+    html += `<div class="empty">No payments due in the next 90 days</div>`;
+  } else {
+    upcoming.forEach(pay => {
+      const d = new Date(pay.d), days = Math.ceil((d-today)/864e5);
+      const uc = days<30 ? 'var(--red)' : days<60 ? 'var(--gold)' : 'var(--muted)';
+      html += `<div class="uitem">
+        <div><div class="uprop">${pay.pname}</div><div class="uinst">${pay.l}</div></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="text-align:right"><div class="uamt">${fm(pay.a)}</div>
+          <div class="udate" style="color:${uc}">${fd(pay.d)} · in ${days} days</div></div>
+          <button class="btn success small" onclick="togglePaid(${pay.pid},${pay.pi})">Mark paid</button>
+        </div>
+      </div>`;
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+// ============================================================
+// BUILD PROPERTIES TABLE
+// ============================================================
+function buildProps() {
+  const el = document.getElementById('props');
+  let html = `<div class="action-row"><button class="btn primary" onclick="showAddProperty()">+ Add Property</button></div>`;
+  if (!PROPS.length) { el.innerHTML = html + `<div class="empty">No properties yet. Click "Add Property" to get started.</div>`; return; }
+  html += `<div class="scroll-x"><table><thead><tr>
+    <th>#</th><th>Project</th><th>Developer</th><th>Type</th>
+    <th>Purchase Price</th><th>Paid</th><th>Balance</th><th>Progress</th><th>Handover</th><th>Actions</th>
+  </tr></thead><tbody>`;
+  PROPS.forEach((p, i) => {
+    const paid = getPaid(p), due = getDue(p), pct = p.pp ? Math.round(paid/p.pp*100) : 0;
+    const col = getDevColor(p.dev), bg = getDevBg(p.dev);
+    html += `<tr>
+      <td style="color:var(--dim);font-family:'DM Mono',monospace;font-size:10px">${String(i+1).padStart(2,'0')}</td>
+      <td><div style="font-weight:500;font-size:12px;color:var(--text)">${p.name}</div>
+          <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace">${p.code}</div></td>
+      <td><span class="badge" style="background:${bg};color:${col}">${p.dev.split(' ').slice(0,2).join(' ')}</span></td>
+      <td style="color:var(--muted)">${p.beds}</td>
+      <td style="font-family:'DM Mono',monospace">${fm(p.pp)}</td>
+      <td style="font-family:'DM Mono',monospace;color:var(--green)">${fm(paid)}</td>
+      <td style="font-family:'DM Mono',monospace;color:var(--red)">${fm(due)}</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div class="btrack" style="width:70px"><div class="bfill" style="width:${pct}%;background:${col}"></div></div>
+        <span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">${pct}%</span>
+      </div></td>
+      <td style="color:var(--muted);font-size:11px">${p.ho}</td>
+      <td><div class="prop-actions">
+        <button class="btn small" onclick="showAddProperty(${p.id})">Edit</button>
+        <button class="btn danger small" onclick="deleteProperty(${p.id})">Del</button>
+      </div></td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  el.innerHTML = html;
+}
+
+// ============================================================
+// BUILD PAYMENT TIMELINE
+// ============================================================
+function buildPay() {
+  const el = document.getElementById('pay');
+  const byYear = {};
+  PROPS.forEach(p => p.pays.forEach((pay, pi) => {
+    if (!pay.d) return;
+    const d = new Date(pay.d), y = d.getFullYear(), m = d.getMonth();
+    if (!byYear[y]) byYear[y] = {};
+    if (!byYear[y][m]) byYear[y][m] = [];
+    byYear[y][m].push({...pay, pi, pid:p.id, pname:p.name});
+  }));
+  const years = Object.keys(byYear).sort();
+
+  let html = `<div class="filters" id="payfilters">
+    <button class="fbtn on" onclick="filterPay('all',this)">All years</button>
+    ${years.map(y => `<button class="fbtn" onclick="filterPay('${y}',this)">${y}</button>`).join('')}
+  </div>`;
+
+  years.forEach(y => {
+    const allPays = Object.values(byYear[y]).flat();
+    const yearTotal = allPays.reduce((s,p) => s+(p.a||0), 0);
+    const yearPaid = allPays.filter(p=>p.p).reduce((s,p) => s+(p.a||0), 0);
+    html += `<div class="ysec" data-year="${y}">
+      <div class="yhdr">
+        <span class="yyr">${y}</span>
+        <span class="ytot">${fm(yearTotal)} total &nbsp;·&nbsp; <span style="color:var(--green)">${fm(yearPaid)} paid</span> &nbsp;·&nbsp; <span style="color:var(--red)">${fm(yearTotal-yearPaid)} remaining</span></span>
+      </div>`;
+    Object.keys(byYear[y]).sort((a,b) => +a-+b).forEach(m => {
+      const pays = byYear[y][m].sort((a,b) => new Date(a.d)-new Date(b.d));
+      const mTotal = pays.reduce((s,p) => s+(p.a||0), 0);
+      html += `<div class="mrow">
+        <div class="mlabel">${MN[+m]}<br><span style="font-size:9px">${fs(mTotal)}</span></div>
+        <div class="mpays">`;
+      pays.forEach(pay => {
+        const bg = pay.p ? 'rgba(29,158,117,0.15)' : 'rgba(184,150,12,0.12)';
+        const col = pay.p ? '#1D9E75' : '#C9A84C';
+        html += `<div class="pitem ${pay.p ? 'paid-item' : ''}">
+          <div style="display:flex;align-items:center;gap:8px;flex:1">
+            <span class="badge" style="background:${bg};color:${col};min-width:36px;text-align:center">${pay.p?'paid':'due'}</span>
+            <div class="pinf"><div class="pprop">${pay.pname}</div><div class="pinst">${pay.l}</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="text-align:right">
+              <div class="pamt2">${pay.a ? fm(pay.a) : '—'}</div>
+              <div class="pdate2">${fd(pay.d)}</div>
+            </div>
+            <button class="btn small ${pay.p ? 'ghost' : 'success'}" onclick="togglePaid(${pay.pid},${pay.pi})" style="min-width:60px">${pay.p ? 'Undo' : 'Mark paid'}</button>
+          </div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  });
+
+  el.innerHTML = html;
+
+  window.filterPay = function(yr, btn) {
+    document.querySelectorAll('#payfilters .fbtn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    document.querySelectorAll('#pay .ysec').forEach(s => {
+      s.style.display = (yr==='all' || s.dataset.year===yr) ? 'block' : 'none';
+    });
+  };
+}
+
+// ============================================================
+// BUILD YEARLY OVERVIEW
+// ============================================================
+function buildYr() {
+  const el = document.getElementById('yr');
+  const byYear = {};
+  PROPS.forEach(p => p.pays.forEach(pay => {
+    if (!pay.d) return;
+    const d = new Date(pay.d), y = d.getFullYear(), m = d.getMonth();
+    if (!byYear[y]) byYear[y] = {};
+    byYear[y][m] = (byYear[y][m] || 0) + (pay.a || 0);
+  }));
+  const years = Object.keys(byYear).sort();
+  if (!years.length) { el.innerHTML = `<div class="empty">No payment data yet</div>`; return; }
+
+  const yTotals = {};
+  years.forEach(y => { yTotals[y] = Object.values(byYear[y]).reduce((s,v) => s+v, 0); });
+  const maxT = Math.max(...Object.values(yTotals));
+
+  let html = `<div class="card" style="margin-bottom:16px">
+    <div class="ctitle">Annual Payments Due (AED)</div>
+    <div class="ybar-row">`;
+  years.forEach(y => {
+    const h = Math.round(yTotals[y]/maxT * 90);
+    const col = YCOLORS[y] || '#888';
+    html += `<div class="ybar-wrap">
+      <div class="yba">${fs(yTotals[y])}</div>
+      <div class="ybar" style="height:${h}px;background:${col}"></div>
+      <div class="ybyr">${y}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  years.forEach(y => {
+    const months = byYear[y];
+    const maxM = Math.max(...Object.values(months));
+    const col = YCOLORS[y] || '#888';
+    html += `<div class="ysec">
+      <div class="yhdr">
+        <span class="yyr" style="color:${col}">${y}</span>
+        <span class="ytot">${fm(yTotals[y])}</span>
+      </div>
+      <div class="scroll-x"><table><thead><tr><th>Month</th><th>Payment Due</th><th>Relative</th></tr></thead><tbody>`;
+    Object.keys(months).sort((a,b) => +a-+b).forEach(m => {
+      const amt = months[m];
+      html += `<tr>
+        <td style="font-family:'DM Mono',monospace;font-size:11px">${MN[+m]}</td>
+        <td style="font-family:'DM Mono',monospace">${fm(amt)}</td>
+        <td><div class="btrack" style="width:120px;display:inline-block">
+          <div class="bfill" style="width:${Math.round(amt/maxM*100)}%;background:${col}"></div>
+        </div></td>
+      </tr>`;
+    });
+    html += `</tbody></table></div></div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+load();
+</script>
+</body>
+</html>
